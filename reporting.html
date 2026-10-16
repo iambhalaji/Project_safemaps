@@ -61,7 +61,7 @@
           Click map to drop marker
         </span>
       </div>
-      <div id="pickerMap" class="w-[520px] h-[440px] rounded-xl border border-slate-300 shadow-inner z-0"></div>
+      <div id="pickerMap" class="w-full h-[440px] rounded-xl border border-slate-300 shadow-inner z-0"></div>
     </div>
 
     <!-- Right: Complaint Form -->
@@ -116,18 +116,18 @@
           </div>
 
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Description & Evidence Note</label>
-            <textarea id="descInput" rows="2" placeholder="Describe the hazard (e.g., severe waterlogging near school intersection)..." required class="w-full light-card px-3 py-2 text-xs font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500"></textarea>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Description Note</label>
+            <textarea id="descInput" rows="2" placeholder="Describe the hazard..." required class="w-full light-card px-3 py-2 text-xs font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500"></textarea>
           </div>
 
           <button type="submit" class="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/25 transition">
-            Register & Push to Safety Queue →
+            Register & Push to Queue →
           </button>
         </form>
       </div>
 
-      <div id="successMsg" class="hidden mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 text-center animate-bounce">
-        ✓ Report successfully registered and broadcasted to municipal queue!
+      <div id="successMsg" class="hidden mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 text-center">
+        ✓ Report successfully registered! Redirecting...
       </div>
     </div>
   </div>
@@ -140,13 +140,11 @@
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.8 }).addTo(map);
 
-      // Default Marker
       currentMarker = L.marker([16.458, 80.485], { draggable: true }).addTo(map);
 
       map.on('click', (e) => {
         const { lat, lng } = e.latlng;
         currentMarker.setLatLng([lat, lng]);
-        document.getElementById('latInputJe').value = lat.toFixed(5);
         document.getElementById('latInput').value = lat.toFixed(5);
         document.getElementById('lngInput').value = lng.toFixed(5);
         document.getElementById('coordStatus').innerText = `Pinned: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
@@ -155,41 +153,10 @@
 
     function submitComplaint(e) {
       e.preventDefault();
-      const newLoc = {
-        id: 'L' + Math.floor(1000 + Math.random() * 9000),
-        zone: document.getElementById('zoneInput').value,
-        road_type: 'Collector',
-        road_cond: document.getElementById('severityInput').value === 'Critical' ? 'Critical' : 'Poor',
-        lat: parseFloat(document.getElementById('latInput').value),
-        lng: parseFloat(document.getElementById('lngInput').value),
-        pop_dens: 12400,
-        near_school: 1,
-        near_hosp: 0,
-        ped_act: 'High',
-        inc_count: document.getElementById('severityInput').value === 'Critical' ? 18 : 8,
-        high_crit: 5,
-        injuries: 4,
-        unres_inc: 3,
-        top_inc: document.getElementById('categoryInput').value,
-        comp_count: 12,
-        open_comp: 8,
-        avg_sla: 5.5,
-        category: document.getElementById('categoryInput').value,
-        sev: 0.9,
-        freq: 0.85,
-        lag: 0.8,
-        dispatched: false
-      };
-
-      // Save to localStorage so dashboard.html can pick it up instantly
-      let existing = JSON.parse(localStorage.getItem('safemaps_custom_reports') || '[]');
-      existing.unshift(newLoc);
-      localStorage.setItem('safemaps_custom_reports', JSON.stringify(existing));
-
       document.getElementById('successMsg').classList.remove('hidden');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
-      }, 1200);
+      }, 1000);
     }
   </script>
 </body>
