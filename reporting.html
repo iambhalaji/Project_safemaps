@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Safe Maps — Register Incident / Complaint</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(at 15% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 45%),
+        radial-gradient(at 85% 10%, rgba(99, 102, 241, 0.06) 0px, transparent 45%);
+      color: #0f172a;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      letter-spacing: -0.015em;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.02em; }
+    .light-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+      border-radius: 14px;
+    }
+    .leaflet-tile-pane { filter: brightness(0.95) contrast(1.1) saturate(1.15); }
+    .leaflet-control-attribution { display: none !important; }
+  </style>
+</head>
+<body class="px-7 py-5 min-h-screen flex flex-col justify-between">
+
+  <!-- Top Bar -->
+  <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+    <div class="flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center shadow-md shadow-sky-500/20 font-extrabold text-white text-lg">
+        SM
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Project Safe Maps · Citizen & Officer Intake Portal</h1>
+        <p class="text-xs text-slate-500 font-medium">Click anywhere on the satellite map to pin location coordinates and submit a hazard report</p>
+      </div>
+    </div>
+    <div>
+      <a href="dashboard.html" class="light-card text-slate-700 hover:bg-slate-50 text-xs font-bold px-4 py-2.5 rounded-xl transition border border-slate-200 shadow-sm">
+        ← Back to Live Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid grid-cols-12 gap-6 mb-6">
+    
+    <!-- Left: Interactive Pin-Drop Map -->
+    <div class="col-span-7 light-card p-4 flex flex-col">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">1. Select Incident Coordinates on Map</h2>
+        <span id="coordStatus" class="mono text-[11px] font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded border border-sky-200">
+          Click map to drop marker
+        </span>
+      </div>
+      <div id="pickerMap" class="w-[520px] h-[440px] rounded-xl border border-slate-300 shadow-inner z-0"></div>
+    </div>
+
+    <!-- Right: Complaint Form -->
+    <div class="col-span-5 light-card p-6 flex flex-col justify-between">
+      <div>
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-4 pb-2 border-b border-slate-100">
+          2. Enter Incident & Hazard Details
+        </h2>
+
+        <form id="complaintForm" onsubmit="submitComplaint(event)" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Latitude</label>
+              <input id="latInput" type="text" readonly value="16.45800" required class="w-full light-card px-3 py-2 text-xs font-semibold mono text-slate-700 bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Longitude</label>
+              <input id="lngInput" type="text" readonly value="80.48500" required class="w-full light-card px-3 py-2 text-xs font-semibold mono text-slate-700 bg-slate-50">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Zone Identifier</label>
+            <select id="zoneInput" class="w-full light-card px-3 py-2 text-xs font-bold text-slate-800 outline-none border border-slate-200">
+              <option value="ZONE_05">ZONE_05 (Amaravati Arterial)</option>
+              <option value="ZONE_14">ZONE_14 (Collector Hub)</option>
+              <option value="ZONE_20">ZONE_20 (High Density Residential)</option>
+              <option value="ZONE_09">ZONE_09 (Commercial District)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Hazard Category</label>
+            <select id="categoryInput" class="w-full light-card px-3 py-2 text-xs font-bold text-slate-800 outline-none border border-slate-200">
+              <option value="Drainage">Drainage & Flooding</option>
+              <option value="Traffic">Traffic & Signal Failure</option>
+              <option value="Road damage">Road Damage & Potholes</option>
+              <option value="Lighting">Streetlight Outage / Dark Zone</option>
+              <option value="Pedestrian safety">Pedestrian Safety Hazard</option>
+              <option value="Waste">Municipal Waste Overflow</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Incident Severity</label>
+            <select id="severityInput" class="w-full light-card px-3 py-2 text-xs font-bold text-slate-800 outline-none border border-slate-200">
+              <option value="Medium">Medium (Caution Required)</option>
+              <option value="High">High (Urgent Repair Needed)</option>
+              <option value="Critical">Critical (Immediate Danger / Hazard)</option>
+              <option value="Low">Low (Minor Fault)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Description & Evidence Note</label>
+            <textarea id="descInput" rows="2" placeholder="Describe the hazard (e.g., severe waterlogging near school intersection)..." required class="w-full light-card px-3 py-2 text-xs font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500"></textarea>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/25 transition">
+            Register & Push to Safety Queue →
+          </button>
+        </form>
+      </div>
+
+      <div id="successMsg" class="hidden mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 text-center animate-bounce">
+        ✓ Report successfully registered and broadcasted to municipal queue!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let map, currentMarker;
+
+    window.onload = () => {
+      map = L.map('pickerMap', { zoomControl: true }).setView([16.458, 80.485], 13);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.8 }).addTo(map);
+
+      // Default Marker
+      currentMarker = L.marker([16.458, 80.485], { draggable: true }).addTo(map);
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        currentMarker.setLatLng([lat, lng]);
+        document.getElementById('latInputJe').value = lat.toFixed(5);
+        document.getElementById('latInput').value = lat.toFixed(5);
+        document.getElementById('lngInput').value = lng.toFixed(5);
+        document.getElementById('coordStatus').innerText = `Pinned: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      });
+    };
+
+    function submitComplaint(e) {
+      e.preventDefault();
+      const newLoc = {
+        id: 'L' + Math.floor(1000 + Math.random() * 9000),
+        zone: document.getElementById('zoneInput').value,
+        road_type: 'Collector',
+        road_cond: document.getElementById('severityInput').value === 'Critical' ? 'Critical' : 'Poor',
+        lat: parseFloat(document.getElementById('latInput').value),
+        lng: parseFloat(document.getElementById('lngInput').value),
+        pop_dens: 12400,
+        near_school: 1,
+        near_hosp: 0,
+        ped_act: 'High',
+        inc_count: document.getElementById('severityInput').value === 'Critical' ? 18 : 8,
+        high_crit: 5,
+        injuries: 4,
+        unres_inc: 3,
+        top_inc: document.getElementById('categoryInput').value,
+        comp_count: 12,
+        open_comp: 8,
+        avg_sla: 5.5,
+        category: document.getElementById('categoryInput').value,
+        sev: 0.9,
+        freq: 0.85,
+        lag: 0.8,
+        dispatched: false
+      };
+
+      // Save to localStorage so dashboard.html can pick it up instantly
+      let existing = JSON.parse(localStorage.getItem('safemaps_custom_reports') || '[]');
+      existing.unshift(newLoc);
+      localStorage.setItem('safemaps_custom_reports', JSON.stringify(existing));
+
+      document.getElementById('successMsg').classList.remove('hidden');
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1200);
+    }
+  </script>
+</body>
+</html>
