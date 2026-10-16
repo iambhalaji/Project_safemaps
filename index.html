@@ -2,12 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Safe Maps — Real-Time Civic Spatial Intelligence</title>
+  <title>Project Safe Maps — Secure Municipal Access</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,8 +11,8 @@
     body {
       background-color: #f8fafc;
       background-image: 
-        radial-gradient(at 15% 0%, rgba(14, 165, 233, 0.06) 0px, transparent 45%),
-        radial-gradient(at 85% 10%, rgba(99, 102, 241, 0.05) 0px, transparent 45%);
+        radial-gradient(at 15% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 45%),
+        radial-gradient(at 85% 10%, rgba(99, 102, 241, 0.06) 0px, transparent 45%);
       color: #0f172a;
       font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
       letter-spacing: -0.015em;
@@ -28,509 +24,50 @@
       box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
       border-radius: 14px;
     }
-    input[type=range] {
-      -webkit-appearance: none;
-      background: #e2e8f0;
-      height: 6px;
-      border-radius: 999px;
-      cursor: pointer;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 16px;
-      width: 16px;
-      border-radius: 50%;
-      background: #0284c7;
-      border: 2px solid #ffffff;
-      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.45);
-      transition: transform 0.1s ease;
-    }
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
-    .leaflet-tile-pane { filter: brightness(0.95) contrast(1.1) saturate(1.15); }
-    .leaflet-control-attribution { display: none !important; }
   </style>
 </head>
-<body class="px-7 py-5 min-h-screen flex flex-col justify-between">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-  <!-- Top Navigation & Dataset Status -->
-  <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
-    <div class="flex items-center gap-4">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center shadow-md shadow-sky-500/20 font-extrabold text-white text-lg">
+  <div class="light-card w-full max-w-md p-8 shadow-2xl border border-slate-200/80 bg-white/95">
+    
+    <!-- Brand Header -->
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/25 font-extrabold text-white text-2xl mx-auto mb-4">
         SM
       </div>
+      <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Project Safe Maps</h2>
+      <p class="text-xs text-slate-500 mt-1 font-medium">Municipal Spatial Safety & Risk Intelligence Portal</p>
+    </div>
+
+    <!-- Login Form -->
+    <form action="dashboard.html" method="GET" class="space-y-4">
       <div>
-        <div class="flex items-center gap-2.5">
-          <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Project Safe Maps</h1>
-          <span id="dataStatusBadge" class="mono text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-            ✓ Real Schema Loaded (L0001–L1000)
-          </span>
-        </div>
-        <p class="text-xs text-slate-500 mt-0.5 font-medium">
-          Joined Schema: <span class="mono text-slate-700 font-semibold">locations.csv (1,000)</span> ⋈ <span class="mono text-slate-700 font-semibold">incidents.csv (10,000)</span> ⋈ <span class="mono text-slate-700 font-semibold">public_complaints.csv (8,000)</span> on <span class="mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold">location_id</span>
-        </p>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Authorized Officer ID</label>
+        <input type="text" value="admin_safe_maps" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
       </div>
-    </div>
 
-    <div class="flex items-center gap-2.5">
-      <!-- Search by Location ID or Zone -->
-      <input id="searchInput" type="text" placeholder="Search ID (e.g. L0362, ZONE_05)..." oninput="renderDashboard()" class="light-card px-3 py-2 text-xs font-medium text-slate-800 outline-none border border-slate-200 w-52 focus:border-sky-500">
-      
-      <!-- Filter by Real Complaint Category -->
-      <select id="categoryFilter" onchange="renderDashboard()" class="light-card px-3 py-2 text-xs font-bold text-slate-700 cursor-pointer outline-none border border-slate-200">
-        <option value="ALL">All Categories (6)</option>
-        <option value="Drainage">Drainage</option>
-        <option value="Traffic">Traffic</option>
-        <option value="Road damage">Road damage</option>
-        <option value="Lighting">Lighting</option>
-        <option value="Pedestrian safety">Pedestrian safety</option>
-        <option value="Waste">Waste</option>
-      </select>
-
-      <!-- Filter by Road Condition -->
-      <select id="roadFilter" onchange="renderDashboard()" class="light-card px-3 py-2 text-xs font-bold text-slate-700 cursor-pointer outline-none border border-slate-200">
-        <option value="ALL">All Road Conditions</option>
-        <option value="Critical">Critical Road (78)</option>
-        <option value="Poor">Poor Road (309)</option>
-        <option value="Fair">Fair Road (383)</option>
-        <option value="Good">Good Road (230)</option>
-      </select>
-
-      <button onclick="exportDispatchedCSV()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition">
-        ⬇ Export Work Orders
-      </button>
-    </div>
-  </div>
-
-  <!-- Top KPI Strip (Grounded in Real CSV Totals) -->
-  <div class="grid grid-cols-4 gap-4 mb-4">
-    <div class="light-card p-4 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-1.5 h-full bg-rose-500"></div>
-      <div class="flex justify-between items-start pl-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Critical High-Risk Locations</span>
-        <span class="mono text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 px-1.5 py-0.5 rounded">P_Score &gt; 75</span>
-      </div>
-      <div id="kpiCritical" class="mono text-2xl font-extrabold text-slate-900 mt-1 pl-1">12 Zones</div>
-      <div class="text-[11px] text-rose-600 mt-0.5 font-semibold pl-1">2,455 High/Critical incidents · 2,475 injuries</div>
-    </div>
-
-    <div class="light-card p-4 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>
-      <div class="flex justify-between items-start pl-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Mean Place Safety Score</span>
-        <span class="mono text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">100 - P_Score</span>
-      </div>
-      <div id="kpiSafety" class="mono text-2xl font-extrabold text-slate-900 mt-1 pl-1">32.8 / 100</div>
-      <div class="text-[11px] text-amber-600 mt-0.5 font-semibold pl-1">Live average across filtered queue</div>
-    </div>
-
-    <div class="light-card p-4 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-1.5 h-full bg-sky-500"></div>
-      <div class="flex justify-between items-start pl-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Unresolved Public Complaints</span>
-        <span class="mono text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded">8,000 Total</span>
-      </div>
-      <div class="mono text-2xl font-extrabold text-slate-900 mt-1 pl-1">3,438 <span class="text-xs font-medium text-slate-400">open/assigned</span></div>
-      <div class="text-[11px] text-sky-600 mt-0.5 font-semibold pl-1">Mean resolution: 6.04 days (Incidents: 32.2h)</div>
-    </div>
-
-    <div class="light-card p-4 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
-      <div class="flex justify-between items-start pl-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Field Teams Dispatched</span>
-        <span class="mono text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">Simulador Live</span>
-      </div>
-      <div id="kpiDispatched" class="mono text-2xl font-extrabold text-slate-900 mt-1 pl-1">0 Active</div>
-      <div class="text-[11px] text-emerald-600 mt-0.5 font-semibold pl-1">Click 'Dispatch' to simulate safety boost</div>
-    </div>
-  </div>
-
-  <!-- Main Bento Grid -->
-  <div class="grid grid-cols-12 gap-5 mb-4">
-    
-    <!-- Left Column: White-Box Normalized Weight Sliders -->
-    <div class="col-span-3 light-card p-4 flex flex-col justify-between">
       <div>
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-          <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">Policy Weight Sliders</h2>
-          <button onclick="resetWeights()" class="mono text-[10px] font-bold text-sky-600 hover:underline">Reset (0.45/0.30/0.25)</button>
+        <div class="flex justify-between items-center mb-1.5">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Secure Access Key</label>
+          <span class="text-[11px] text-sky-600 font-semibold">Demo Bypass Enabled</span>
         </div>
-
-        <div class="space-y-3">
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-700 font-semibold">Incident Severity & Injuries (w₁)</span>
-              <span id="w1Val" class="mono text-sky-600 font-bold">0.45</span>
-            </div>
-            <input id="w1Slider" type="range" min="5" max="90" value="45" oninput="updateWeights()" class="w-full">
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-700 font-semibold">Incident + Complaint Freq (w₂)</span>
-              <span id="w2Val" class="mono text-sky-600 font-bold">0.30</span>
-            </div>
-            <input id="w2Slider" type="range" min="5" max="90" value="30" oninput="updateWeights()" class="w-full">
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-700 font-semibold">SLA Backlog & Context Risk (w₃)</span>
-              <span id="w3Val" class="mono text-sky-600 font-bold">0.25</span>
-            </div>
-            <input id="w3Slider" type="range" min="5" max="90" value="25" oninput="updateWeights()" class="w-full">
-          </div>
-        </div>
-
-        <!-- White-Box Formula Display -->
-        <div class="mt-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Unit-Sum Normalization</span>
-            <span class="mono text-[10px] font-bold text-emerald-600">∑wᵢ = 1.00 ✓</span>
-          </div>
-          <div id="liveFormula" class="mono text-[11px] font-semibold text-emerald-700 leading-relaxed">
-            P = 100 × [0.45(S) + 0.30(F) + 0.25(L)]
-          </div>
-          <div class="mono text-[11px] font-semibold text-sky-700 mt-1 pt-1 border-t border-slate-200">
-            Safety_Score = 100 - P_Score
-          </div>
-        </div>
+        <input type="password" value="datathon2026" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
       </div>
 
-      <div class="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 leading-snug font-medium">
-        <span class="text-amber-600 font-bold">⚠️ Caveat:</span> Coordinates (<code class="mono">16.18°N–16.70°N</code>) represent synthetic educational data mapped onto satellite imagery; not real-world municipal records.
+      <div class="pt-2">
+        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-sky-500/25 transition transform active:scale-[0.98]">
+          Authenticate & Launch Dashboard →
+        </button>
       </div>
-    </div>
+    </form>
 
-    <!-- Center Column: Real Coordinate Satellite Map -->
-    <div class="col-span-5 light-card p-4 flex flex-col">
-      <div class="flex justify-between items-center mb-2.5">
-        <div class="flex items-center gap-2">
-          <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">Spatial Safety Heatmap</h2>
-          <span class="mono text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Click row to fly to lat/lng</span>
-        </div>
-        <div class="flex gap-3 text-[11px] font-bold">
-          <span class="flex items-center gap-1 text-rose-600"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>Critical</span>
-          <span class="flex items-center gap-1 text-amber-600"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>Elevated</span>
-          <span class="flex items-center gap-1 text-emerald-600"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Safe</span>
-        </div>
-      </div>
-      <div id="satMap" class="w-full h-64 rounded-xl border border-slate-300 overflow-hidden shadow-inner z-0"></div>
-    </div>
-
-    <!-- Right Column: Real 2025 Monthly Volume Chart -->
-    <div class="col-span-4 light-card p-4 flex flex-col justify-between">
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">2025 Incident vs. Complaint Trend</h2>
-        <span class="mono text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">18,000 Records</span>
-      </div>
-      <div class="my-auto">
-        <canvas id="trendChart" height="180"></canvas>
-      </div>
+    <!-- Footer Help -->
+    <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+      <p class="text-[11px] text-slate-500 font-medium">
+        Connected to <span class="mono text-slate-700 font-semibold">1,000 Locations</span> × <span class="mono text-slate-700 font-semibold">18,000 Logs</span>
+      </p>
     </div>
   </div>
 
-  <!-- Bottom Table: Explainable Safe Maps Action Queue -->
-  <div class="light-card p-4">
-    <div class="flex justify-between items-center mb-2.5">
-      <div class="flex items-center gap-2.5">
-        <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">Explainable Intervention Queue</h2>
-        <span class="text-[11px] font-medium text-slate-500">— Ranked by Transparent Evidence, Context & Confidence (Not an Unexplained Risk Score)</span>
-      </div>
-      <span id="showingCount" class="mono text-[11px] text-sky-600 font-bold">Showing Top Ranked Locations</span>
-    </div>
-
-    <div class="overflow-x-auto max-h-72 overflow-y-auto">
-      <table class="w-full text-left border-collapse">
-        <thead class="sticky top-0 bg-slate-50 shadow-sm z-10">
-          <tr class="border-b-2 border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-            <th class="py-2.5 pl-3">Rank · Location</th>
-            <th class="py-2.5">Zone & Road Context</th>
-            <th class="py-2.5">Priority Score</th>
-            <th class="py-2.5">Place Safety Score</th>
-            <th class="py-2.5">Primary Hazard Cluster</th>
-            <th class="py-2.5">Explainable Evidence Trail (Joined CSV Signals)</th>
-            <th class="py-2.5">Avg SLA · Conf.</th>
-            <th class="py-2.5 text-right pr-3">Intervention</th>
-          </tr>
-        </thead>
-        <tbody id="queueBody" class="divide-y divide-slate-100 text-xs"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <script>
-    // Pre-computed exact Top 20 + 5 Safe locations directly from locations.csv + incidents.csv + public_complaints.csv
-    let locationsData = [
-      {"id": "L0362", "zone": "ZONE_05", "road_type": "Highway", "road_cond": "Poor", "lat": 16.44065, "lng": 80.46974, "pop_dens": 5701, "near_school": 0, "near_hosp": 0, "ped_act": "Medium", "inc_count": 23, "high_crit": 8, "injuries": 7, "unres_inc": 6, "top_inc": "Flooding", "comp_count": 9, "open_comp": 3, "avg_sla": 7.9, "category": "Drainage", "sev": 1.0, "freq": 0.941, "lag": 0.574, "dispatched": false},
-      {"id": "L0965", "zone": "ZONE_20", "road_type": "Collector", "road_cond": "Critical", "lat": 16.45837, "lng": 80.4046, "pop_dens": 15363, "near_school": 0, "near_hosp": 0, "ped_act": "Medium", "inc_count": 19, "high_crit": 3, "injuries": 12, "unres_inc": 2, "top_inc": "Signal failure", "comp_count": 15, "open_comp": 10, "avg_sla": 6.1, "category": "Traffic", "sev": 0.708, "freq": 1.0, "lag": 0.975, "dispatched": false},
-      {"id": "L0802", "zone": "ZONE_14", "road_type": "Collector", "road_cond": "Good", "lat": 16.42605, "lng": 80.50564, "pop_dens": 21843, "near_school": 1, "near_hosp": 1, "ped_act": "High", "inc_count": 19, "high_crit": 4, "injuries": 4, "unres_inc": 3, "top_inc": "Flooding", "comp_count": 10, "open_comp": 8, "avg_sla": 7.5, "category": "Traffic", "sev": 0.792, "freq": 0.853, "lag": 0.935, "dispatched": false},
-      {"id": "L0048", "zone": "ZONE_01", "road_type": "Local", "road_cond": "Poor", "lat": 16.54945, "lng": 80.50153, "pop_dens": 3769, "near_school": 0, "near_hosp": 1, "ped_act": "Medium", "inc_count": 16, "high_crit": 7, "injuries": 3, "unres_inc": 3, "top_inc": "Flooding", "comp_count": 10, "open_comp": 7, "avg_sla": 7.6, "category": "Road damage", "sev": 0.812, "freq": 0.765, "lag": 0.858, "dispatched": false},
-      {"id": "L0734", "zone": "ZONE_18", "road_type": "Collector", "road_cond": "Fair", "lat": 16.49102, "lng": 80.46622, "pop_dens": 9132, "near_school": 0, "near_hosp": 0, "ped_act": "Medium", "inc_count": 20, "high_crit": 5, "injuries": 6, "unres_inc": 5, "top_inc": "Signal failure", "comp_count": 13, "open_comp": 5, "avg_sla": 6.4, "category": "Drainage", "sev": 0.771, "freq": 0.971, "lag": 0.614, "dispatched": false},
-      {"id": "L0974", "zone": "ZONE_05", "road_type": "Collector", "road_cond": "Fair", "lat": 16.56219, "lng": 80.48247, "pop_dens": 4095, "near_school": 0, "near_hosp": 0, "ped_act": "High", "inc_count": 17, "high_crit": 7, "injuries": 5, "unres_inc": 3, "top_inc": "Blocked drain", "comp_count": 9, "open_comp": 5, "avg_sla": 4.4, "category": "Pedestrian safety", "sev": 0.854, "freq": 0.765, "lag": 0.599, "dispatched": false},
-      {"id": "L0688", "zone": "ZONE_09", "road_type": "Arterial", "road_cond": "Critical", "lat": 16.33918, "lng": 80.60259, "pop_dens": 24409, "near_school": 1, "near_hosp": 0, "ped_act": "High", "inc_count": 19, "high_crit": 7, "injuries": 3, "unres_inc": 7, "top_inc": "Streetlight outage", "comp_count": 6, "open_comp": 3, "avg_sla": 4.9, "category": "Lighting", "sev": 0.833, "freq": 0.735, "lag": 0.599, "dispatched": false},
-      {"id": "L0729", "zone": "ZONE_12", "road_type": "Local", "road_cond": "Poor", "lat": 16.43149, "lng": 80.55395, "pop_dens": 10993, "near_school": 1, "near_hosp": 1, "ped_act": "Low", "inc_count": 17, "high_crit": 7, "injuries": 6, "unres_inc": 6, "top_inc": "Signal failure", "comp_count": 9, "open_comp": 2, "avg_sla": 6.2, "category": "Drainage", "sev": 0.833, "freq": 0.765, "lag": 0.525, "dispatched": false},
-      {"id": "L0326", "zone": "ZONE_05", "road_type": "Arterial", "road_cond": "Fair", "lat": 16.43311, "lng": 80.5881, "pop_dens": 1605, "near_school": 1, "near_hosp": 1, "ped_act": "Low", "inc_count": 17, "high_crit": 2, "injuries": 1, "unres_inc": 3, "top_inc": "Pothole", "comp_count": 12, "open_comp": 6, "avg_sla": 6.2, "category": "Drainage", "sev": 0.646, "freq": 0.853, "lag": 0.735, "dispatched": false},
-      {"id": "L0521", "zone": "ZONE_15", "road_type": "Arterial", "road_cond": "Fair", "lat": 16.6221, "lng": 80.40714, "pop_dens": 20319, "near_school": 0, "near_hosp": 1, "ped_act": "Low", "inc_count": 21, "high_crit": 3, "injuries": 3, "unres_inc": 6, "top_inc": "Signal failure", "comp_count": 7, "open_comp": 2, "avg_sla": 7.1, "category": "Drainage", "sev": 0.812, "freq": 0.824, "lag": 0.469, "dispatched": false},
-      {"id": "L0624", "zone": "ZONE_13", "road_type": "Collector", "road_cond": "Good", "lat": 16.26609, "lng": 80.45473, "pop_dens": 21502, "near_school": 0, "near_hosp": 0, "ped_act": "Medium", "inc_count": 17, "high_crit": 4, "injuries": 5, "unres_inc": 13, "top_inc": "Collision", "comp_count": 11, "open_comp": 6, "avg_sla": 4.9, "category": "Drainage", "sev": 0.729, "freq": 0.824, "lag": 0.593, "dispatched": false},
-      {"id": "L0659", "zone": "ZONE_19", "road_type": "Local", "road_cond": "Good", "lat": 16.45238, "lng": 80.43179, "pop_dens": 21264, "near_school": 1, "near_hosp": 0, "ped_act": "Medium", "inc_count": 15, "high_crit": 8, "injuries": 7, "unres_inc": 4, "top_inc": "Blocked drain", "comp_count": 10, "open_comp": 6, "avg_sla": 5.0, "category": "Road damage", "sev": 0.75, "freq": 0.735, "lag": 0.642, "dispatched": false},
-      {"id": "L0494", "zone": "ZONE_14", "road_type": "Residential", "road_cond": "Critical", "lat": 16.48854, "lng": 80.44479, "pop_dens": 3930, "near_school": 1, "near_hosp": 0, "ped_act": "Medium", "inc_count": 14, "high_crit": 4, "injuries": 7, "unres_inc": 5, "top_inc": "Collision", "comp_count": 14, "open_comp": 8, "avg_sla": 4.2, "category": "Lighting", "sev": 0.562, "freq": 0.824, "lag": 0.84, "dispatched": false},
-      {"id": "L0757", "zone": "ZONE_06", "road_type": "Arterial", "road_cond": "Poor", "lat": 16.52589, "lng": 80.48682, "pop_dens": 3341, "near_school": 0, "near_hosp": 1, "ped_act": "Medium", "inc_count": 11, "high_crit": 6, "injuries": 6, "unres_inc": 3, "top_inc": "Streetlight outage", "comp_count": 13, "open_comp": 10, "avg_sla": 6.2, "category": "Waste", "sev": 0.521, "freq": 0.706, "lag": 1.0, "dispatched": false},
-      {"id": "L0261", "zone": "ZONE_03", "road_type": "Residential", "road_cond": "Poor", "lat": 16.4041, "lng": 80.51922, "pop_dens": 19524, "near_school": 0, "near_hosp": 0, "ped_act": "Medium", "inc_count": 7, "high_crit": 0, "injuries": 1, "unres_inc": 1, "top_inc": "Blocked drain", "comp_count": 2, "open_comp": 0, "avg_sla": 2.1, "category": "Traffic", "sev": 0.146, "freq": 0.265, "lag": 0.21, "dispatched": false},
-      {"id": "L0007", "zone": "ZONE_03", "road_type": "Local", "road_cond": "Fair", "lat": 16.48227, "lng": 80.52487, "pop_dens": 14887, "near_school": 0, "near_hosp": 0, "ped_act": "Medium", "inc_count": 4, "high_crit": 2, "injuries": 2, "unres_inc": 3, "top_inc": "Collision", "comp_count": 1, "open_comp": 1, "avg_sla": 6.2, "category": "Lighting", "sev": 0.229, "freq": 0.147, "lag": 0.361, "dispatched": false}
-    ];
-
-    let w1 = 0.45, w2 = 0.30, w3 = 0.25;
-    let map, markersLayer;
-
-    window.onload = () => {
-      // Center on real dataset mean coordinates (16.45, 80.48)
-      map = L.map('satMap', { zoomControl: true }).setView([16.458, 80.485], 11);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.8 }).addTo(map);
-      markersLayer = L.layerGroup().addTo(map);
-      
-      initChart();
-      renderDashboard();
-      tryAutoLoadCSVs(); // Automatically loads all 1,000 rows if CSVs are hosted in same repo folder
-    };
-
-    // Optional live CSV auto-loader if locations.csv, incidents.csv, public_complaints.csv are in repo
-    async function tryAutoLoadCSVs() {
-      try {
-        const [locRes, incRes, compRes] = await Promise.all([
-          fetch('locations.csv'), fetch('incidents.csv'), fetch('public_complaints.csv')
-        ]);
-        if (!locRes.ok || !incRes.ok || !compRes.ok) return;
-
-        const locText = await locRes.text();
-        const incText = await incRes.text();
-        const compText = await compRes.text();
-
-        const locs = Papa.parse(locText, { header: true, skipEmptyLines: true }).data;
-        const incs = Papa.parse(incText, { header: true, skipEmptyLines: true }).data;
-        const comps = Papa.parse(compText, { header: true, skipEmptyLines: true }).data;
-
-        const sevMap = { 'Low': 1, 'Medium': 2, 'High': 3, 'Critical': 4 };
-        const byLoc = {};
-
-        locs.forEach(l => {
-          byLoc[l.location_id] = {
-            id: l.location_id, zone: l.zone, road_type: l.road_type, road_cond: l.road_condition,
-            lat: parseFloat(l.latitude), lng: parseFloat(l.longitude),
-            pop_dens: parseInt(l.population_density_per_km2 || 0),
-            near_school: parseInt(l.near_school || 0), near_hosp: parseInt(l.near_hospital || 0),
-            ped_act: l.pedestrian_activity || 'Medium',
-            inc_count: 0, sev_sum: 0, high_crit: 0, injuries: 0, unres_inc: 0, inc_types: {},
-            comp_count: 0, open_comp: 0, sla_sum: 0, comp_cats: {}, dispatched: false
-          };
-        });
-
-        incs.forEach(i => {
-          const b = byLoc[i.location_id];
-          if (!b) return;
-          const s = sevMap[i.severity] || 1;
-          b.inc_count++; b.sev_sum += s;
-          if (s >= 3) b.high_crit++;
-          b.injuries += parseInt(i.injuries || 0);
-          if (i.resolved === '0') b.unres_inc++;
-          b.inc_types[i.incident_type] = (b.inc_types[i.incident_type] || 0) + 1;
-        });
-
-        comps.forEach(c => {
-          const b = byLoc[c.location_id];
-          if (!b) return;
-          b.comp_count++;
-          if (c.status !== 'Resolved' && c.status !== 'Closed') b.open_comp++;
-          b.sla_sum += parseFloat(c.days_to_resolution || 0);
-          b.comp_cats[c.category] = (b.comp_cats[c.category] || 0) + 1;
-        });
-
-        const allRows = Object.values(byLoc);
-        const maxSev = Math.max(...allRows.map(r => r.sev_sum), 1);
-        const maxFreq = Math.max(...allRows.map(r => r.inc_count + r.comp_count), 1);
-
-        allRows.forEach(r => {
-          r.avg_sla = r.comp_count ? +(r.sla_sum / r.comp_count).toFixed(1) : 0;
-          r.top_inc = Object.entries(r.inc_types).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'None';
-          r.category = Object.entries(r.comp_cats).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'Drainage';
-          const condScore = r.road_cond === 'Critical' ? 1 : (r.road_cond === 'Poor' ? 0.8 : 0.4);
-          r.raw_lag = r.open_comp * 2 + r.avg_sla + condScore * 5;
-        });
-
-        const maxLag = Math.max(...allRows.map(r => r.raw_lag), 1);
-        allRows.forEach(r => {
-          r.sev = +(r.sev_sum / maxSev).toFixed(3);
-          r.freq = +((r.inc_count + r.comp_count) / maxFreq).toFixed(3);
-          r.lag = +(r.raw_lag / maxLag).toFixed(3);
-        });
-
-        locationsData = allRows;
-        document.getElementById('dataStatusBadge').innerText = `✓ Live Joined: ${allRows.length} Locations × 18,000 Logs`;
-        renderDashboard();
-      } catch (e) {
-        // Fallback to embedded real Top 25 records if opened via file://
-      }
-    }
-
-    function updateWeights() {
-      let v1 = parseInt(document.getElementById('w1Slider').value);
-      let v2 = parseInt(document.getElementById('w2Slider').value);
-      let v3 = parseInt(document.getElementById('w3Slider').value);
-      let total = v1 + v2 + v3;
-      w1 = +(v1 / total).toFixed(2);
-      w2 = +(v2 / total).toFixed(2);
-      w3 = +(1 - w1 - w2).toFixed(2);
-
-      document.getElementById('w1Val').innerText = w1.toFixed(2);
-      document.getElementById('w2Val').innerText = w2.toFixed(2);
-      document.getElementById('w3Val').innerText = w3.toFixed(2);
-      document.getElementById('liveFormula').innerText = `P = 100 × [${w1.toFixed(2)}(S) + ${w2.toFixed(2)}(F) + ${w3.toFixed(2)}(L)]`;
-      renderDashboard();
-    }
-
-    function resetWeights() {
-      document.getElementById('w1Slider').value = 45;
-      document.getElementById('w2Slider').value = 30;
-      document.getElementById('w3Slider').value = 25;
-      updateWeights();
-    }
-
-    function focusLocation(lat, lng) {
-      map.flyTo([lat, lng], 14, { duration: 0.9 });
-    }
-
-    function toggleDispatch(id, event) {
-      event.stopPropagation();
-      const item = locationsData.find(d => d.id === id);
-      if (item) item.dispatched = !item.dispatched;
-      renderDashboard();
-    }
-
-    function exportDispatchedCSV() {
-      const dispatched = locationsData.filter(d => d.dispatched);
-      const rows = (dispatched.length ? dispatched : locationsData.slice(0, 10)).map(d => ({
-        location_id: d.id, zone: d.zone, road_type: d.road_type, road_condition: d.road_cond,
-        primary_category: d.category, top_incident: d.top_inc, incidents: d.inc_count,
-        open_complaints: d.open_comp, status: d.dispatched ? 'DISPATCHED' : 'QUEUED'
-      }));
-      const csv = Papa.unparse(rows);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'SafeMaps_Intervention_WorkOrders.csv';
-      link.click();
-    }
-
-    function renderDashboard() {
-      const catFilter = document.getElementById('categoryFilter').value;
-      const roadFilter = document.getElementById('roadFilter').value;
-      const query = document.getElementById('searchInput').value.trim().toUpperCase();
-
-      const tbody = document.getElementById('queueBody');
-      tbody.innerHTML = '';
-      markersLayer.clearLayers();
-
-      let filtered = locationsData
-        .filter(d => (catFilter === 'ALL' || d.category === catFilter))
-        .filter(d => (roadFilter === 'ALL' || d.road_cond === roadFilter))
-        .filter(d => (!query || d.id.includes(query) || d.zone.includes(query) || d.top_inc.toUpperCase().includes(query)))
-        .map(d => {
-          // If dispatched, simulate a 35% reduction in risk score to show intervention impact
-          const rawP = 100 * (w1 * d.sev + w2 * d.freq + w3 * d.lag);
-          const pScore = +(d.dispatched ? rawP * 0.65 : rawP).toFixed(1);
-          const sScore = +(100 - pScore).toFixed(1);
-          const conf = Math.min(98, Math.round(78 + (d.inc_count + d.comp_count) * 0.55));
-          return { ...d, pScore, sScore, conf };
-        })
-        .sort((a, b) => b.pScore - a.pScore);
-
-      const criticalCount = filtered.filter(d => d.pScore >= 75).length;
-      const displayRows = filtered.slice(0, 25);
-      const safetySum = displayRows.reduce((acc, r) => acc + r.sScore, 0);
-
-      displayRows.forEach((loc, idx) => {
-        const color = loc.pScore >= 75 ? '#e11d48' : (loc.pScore >= 55 ? '#f59e0b' : '#10b981');
-
-        L.circle([loc.lat, loc.lng], {
-          color: color, fillColor: color, fillOpacity: 0.45, radius: 450, weight: 2
-        }).bindPopup(`
-          <div class="text-xs">
-            <b>${loc.id} · ${loc.zone}</b> (${loc.road_type} - ${loc.road_cond})<br>
-            Priority Score: <b>${loc.pScore}</b> | Safety Score: <b>${loc.sScore}</b><br>
-            Incidents: <b>${loc.inc_count}</b> (${loc.high_crit} severe, ${loc.injuries} injuries)<br>
-            Complaints: <b>${loc.comp_count}</b> (${loc.open_comp} open, avg ${loc.avg_sla}d)
-          </div>
-        `).addTo(markersLayer);
-
-        const pBadge = loc.pScore >= 75
-          ? `<span class="mono bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md font-bold">${loc.pScore} / 100</span>`
-          : loc.pScore >= 55
-          ? `<span class="mono bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md font-bold">${loc.pScore} / 100</span>`
-          : `<span class="mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">${loc.pScore} / 100</span>`;
-
-        const sBadge = loc.sScore <= 25
-          ? `<span class="mono text-rose-600 font-bold">${loc.sScore} / 100 (Critical)</span>`
-          : loc.sScore <= 45
-          ? `<span class="mono text-amber-600 font-bold">${loc.sScore} / 100 (Elevated)</span>`
-          : `<span class="mono text-emerald-600 font-bold">${loc.sScore} / 100 (Safe)</span>`;
-
-        const contextTags = [
-          loc.near_school ? '🏫 School' : '',
-          loc.near_hosp ? '🏥 Hospital' : '',
-          `Ped: ${loc.ped_act}`
-        ].filter(Boolean).join(' · ');
-
-        const evidenceText = `${loc.inc_count} incidents (${loc.high_crit} High/Crit ${loc.top_inc}, ${loc.injuries} inj) + ${loc.comp_count} complaints (${loc.open_comp} open)`;
-
-        const btn = loc.dispatched
-          ? `<button onclick="toggleDispatch('${loc.id}', event)" class="bg-emerald-600 text-white px-2.5 py-1 rounded-md text-[11px] font-semibold shadow-sm">✓ Dispatched (+Safety)</button>`
-          : `<button onclick="toggleDispatch('${loc.id}', event)" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded-md text-[11px] font-semibold shadow-sm transition">Dispatch Crew</button>`;
-
-        tbody.innerHTML += `
-          <tr onclick="focusLocation(${loc.lat}, ${loc.lng})" class="hover:bg-sky-50/60 cursor-pointer transition">
-            <td class="py-2.5 pl-3 mono font-bold text-slate-900">#${String(idx + 1).padStart(2, '0')} · ${loc.id}</td>
-            <td>
-              <div class="font-bold text-slate-800">${loc.zone} · ${loc.road_type} (${loc.road_cond})</div>
-              <div class="text-[10px] text-slate-500">${contextTags} · Pop: ${loc.pop_dens}/km²</div>
-            </td>
-            <td>${pBadge}</td>
-            <td>${sBadge}</td>
-            <td class="font-bold text-slate-800">${loc.category} <span class="text-slate-400 font-normal">/ ${loc.top_inc}</span></td>
-            <td class="text-slate-600 font-medium">${evidenceText}</td>
-            <td><span class="mono text-slate-700 font-semibold">${loc.avg_sla}d</span> · <span class="mono text-emerald-600 font-bold">${loc.conf}%</span></td>
-            <td class="text-right pr-3">${btn}</td>
-          </tr>
-        `;
-      });
-
-      document.getElementById('kpiCritical').innerText = `${criticalCount} Zones`;
-      document.getElementById('kpiSafety').innerText = `${(safetySum / (displayRows.length || 1)).toFixed(1)} / 100`;
-      document.getElementById('kpiDispatched').innerText = `${locationsData.filter(d => d.dispatched).length} Active`;
-      document.getElementById('showingCount').innerText = `Showing Top ${displayRows.length} of ${filtered.length} Matching Locations`;
-    }
-
-    function initChart() {
-      // Exact 2025 monthly counts computed from incidents.csv & public_complaints.csv
-      const ctx = document.getElementById('trendChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-          datasets: [
-            { label: 'Incidents (10,000)', data: [862, 758, 858, 843, 838, 799, 853, 846, 859, 842, 840, 802], borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.14)', borderWidth: 2.5, tension: 0.35, fill: true },
-            { label: 'Complaints (8,000)', data: [702, 615, 666, 649, 667, 649, 687, 715, 640, 725, 648, 637], borderColor: '#e11d48', borderDash: [4, 4], borderWidth: 2, tension: 0.35, fill: false }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { labels: { color: '#334155', font: { family: 'Plus Jakarta Sans', size: 11, weight: '700' }, boxWidth: 12 } } },
-          scales: {
-            x: { ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } }, grid: { display: false } },
-            y: { ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#f1f5f9' } }
-          }
-        }
-      });
-    }
-  </script>
 </body>
 </html>
