@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Safe Maps — Secure Municipal Access</title>
+  <title>Project Safe Maps — Portal Access</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,37 +31,55 @@
   <div class="light-card w-full max-w-md p-8 shadow-2xl border border-slate-200/80 bg-white/95">
     
     <!-- Brand Header -->
-    <div class="text-center mb-8">
-      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/25 font-extrabold text-white text-2xl mx-auto mb-4">
+    <div class="text-center mb-6">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/25 font-extrabold text-white text-2xl mx-auto mb-3">
         SM
       </div>
-      <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Project Safe Maps</h2>
-      <p class="text-xs text-slate-500 mt-1 font-medium">Municipal Spatial Safety & Risk Intelligence Portal</p>
+      <h2 id="portalTitle" class="text-2xl font-extrabold tracking-tight text-slate-900">Municipal Officer Sign In</h2>
+      <p id="portalSub" class="text-xs text-slate-500 mt-1 font-medium">Project Safe Maps Spatial Intelligence Portal</p>
     </div>
 
-    <!-- Login Form -->
-    <form action="dashboard.html" method="GET" class="space-y-4">
-      <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Authorized Officer ID</label>
-        <input type="text" value="admin_safe_maps" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
-      </div>
+    <!-- Mode Switcher Tabs -->
+    <div class="flex rounded-xl bg-slate-100 p-1 mb-6 border border-slate-200">
+      <button id="tabLogin" onclick="switchMode('login')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition">Sign In</button>
+      <button id="tabRegister" onclick="switchMode('register')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition">Create Account</button>
+    </div>
 
-      <div>
-        <div class="flex justify-between items-center mb-1.5">
-          <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Secure Access Key</label>
-          <span class="text-[11px] text-sky-600 font-semibold">Demo Bypass Enabled</span>
+    <!-- Forms Container -->
+    <div id="loginFormContainer">
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Username or Officer ID</label>
+          <input id="loginUser" type="text" value="admin_safe_maps" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
         </div>
-        <input type="password" value="datathon2026" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
-      </div>
-
-      <div class="pt-2">
-        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-sky-500/25 transition transform active:scale-[0.98]">
-          Authenticate & Launch Dashboard →
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Secure Password</label>
+          <input id="loginPass" type="password" value="datathon2026" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
+        </div>
+        <div id="loginError" class="hidden text-xs font-semibold text-rose-600 text-center"></div>
+        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-sky-500/25 transition">
+          Launch Dashboard →
         </button>
-      </div>
-    </form>
+      </form>
+    </div>
 
-    <!-- Footer Help -->
+    <div id="registerFormContainer" class="hidden">
+      <form onsubmit="handleRegister(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Choose Username / ID</label>
+          <input id="regUser" type="text" placeholder="e.g. officer_alex" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Create Password</label>
+          <input id="regPass" type="password" placeholder="Min 6 characters" required class="w-full light-card px-4 py-3 text-sm font-medium text-slate-800 outline-none border border-slate-200 focus:border-sky-500">
+        </div>
+        <div id="regSuccess" class="hidden text-xs font-bold text-emerald-600 text-center">Account created successfully! You can now sign in.</div>
+        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25 transition">
+          Register & Save Details →
+        </button>
+      </form>
+    </div>
+
     <div class="mt-6 pt-5 border-t border-slate-100 text-center">
       <p class="text-[11px] text-slate-500 font-medium">
         Connected to <span class="mono text-slate-700 font-semibold">1,000 Locations</span> × <span class="mono text-slate-700 font-semibold">18,000 Logs</span>
@@ -69,5 +87,59 @@
     </div>
   </div>
 
+  <script>
+    function switchMode(mode) {
+      if (mode === 'login') {
+        document.getElementById('loginFormContainer').classList.remove('hidden');
+        document.getElementById('registerFormContainer').classList.add('hidden');
+        document.getElementById('tabLogin').className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
+        document.getElementById('tabRegister').className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition';
+        document.getElementById('portalTitle').innerText = 'Municipal Officer Sign In';
+      } else {
+        document.getElementById('registerFormContainer').classList.remove('hidden');
+        document.getElementById('loginFormContainer').classList.add('hidden');
+        document.getElementById('tabRegister').className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition';
+        document.getElementById('tabLogin').className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition';
+        document.getElementById('portalTitle').innerText = 'Register Officer Account';
+      }
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const u = document.getElementById('regUser').value.trim();
+      const p = document.getElementById('regPass').value.trim();
+      
+      let users = JSON.parse(localStorage.getItem('safemaps_users') || '{}');
+      users[u] = p;
+      localStorage.setItem('safemaps_users', JSON.stringify(users));
+
+      document.getElementById('regSuccess').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('regSuccess').classList.add('hidden');
+        document.getElementById('loginUser').value = u;
+        document.getElementById('loginPass').value = p;
+        switchMode('login');
+      }, 1000);
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+
+      // Default demo bypass + check registered users in localStorage
+      let users = JSON.parse(localStorage.getItem('safemaps_users') || '{}');
+      users['admin_safe_maps'] = 'datathon2026';
+
+      if (users[u] && users[u] === p) {
+        localStorage.setItem('safemaps_active_user', u);
+        window.location.href = 'dashboard.html';
+      } else {
+        const err = document.getElementById('loginError');
+        err.innerText = 'Invalid username or password. Try default admin or register new.';
+        err.classList.remove('hidden');
+      }
+    }
+  </script>
 </body>
 </html>
